@@ -1,4 +1,5 @@
-# docker-compose.yml
+name: sgu-dmga-10c
+
 services:
   database:
     image: mysql:8
@@ -50,8 +51,8 @@ services:
 
 networks:
   sgu-net:
-    driver: bridge   # <-- CAMBIA ESTO a driver: bridge (no external)
+    driver: bridge
 
 volumes:
   sgu-volume:
-    driver: local    # <-- CAMBIA ESTO también
+    driver: local

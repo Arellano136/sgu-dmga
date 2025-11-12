@@ -1,48 +1,50 @@
-pipeline{
+pipeline {
     agent any
 
-    stages{
-        //Para parar todo el poryecto y los servicios
-        stage('Parando los servicios'){
-            steps{
-                bat'''
-                docker compose -p sgu-dmga-10c down || true 
-                '''
-            }
-        }//para eliminar las imagenes
-        stage('Eliminando imágenes anteriores...') {
+    stages {
+        // Para parar todo el proyecto y los servicios
+        stage('Parando los servicios') {
             steps {
                 bat '''
-                    for /f "tokens=*" %%i in ('docker images --filter "label=com.docker.compose.project=sgu-dmga-10c" -q') do (
-                        docker rmi -f %%i
+                    docker compose -p sgu-dmga-10c down || exit 0
+                '''
+            }
+        }
+        
+        // Para eliminar las imágenes
+        stage('Eliminando imágenes anteriores') {
+            steps {
+                bat '''
+                    docker images --format "{{.Repository}}:{{.Tag}}" | findstr /C:"sgu" > temp_images.txt
+                    if exist temp_images.txt (
+                        for /f "delims=" %%i in (temp_images.txt) do (
+                            docker rmi -f %%i 2>nul || echo Imagen %%i no encontrada
+                        )
+                        del temp_images.txt
                     )
-                    if errorlevel 1 (
-                        echo No hay imagenes por eliminar
-                    ) else (
-                        echo Imagenes eliminadas correctamente
-                    )
+                    echo Limpieza de imagenes completada
                 '''
             }
         }
 
-
-//para bajar actualizaciones
-        stage('Actualizando...'){
-            steps{
+        // Para bajar actualizaciones
+        stage('Actualizando') {
+            steps {
                 checkout scm
             }
         }
-        //para levantar y desplegar proyecto
-        stage('Construyendo y desplegando servicios...') {
+        
+        // Para levantar y desplegar proyecto
+        stage('Construyendo y desplegando servicios') {
             steps {
                 bat '''
-                    docker compose up --build -d
+                    docker compose -p sgu-dmga-10c up --build -d
                 '''
             }
         }
     }
 
-       post {
+    post {
         success {
             echo 'Pipeline ejecutado con éxito'
         }
@@ -55,5 +57,4 @@ pipeline{
             echo 'Pipeline finalizado'
         }
     }
-
 }
