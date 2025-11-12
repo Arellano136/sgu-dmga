@@ -6,6 +6,7 @@ COPY . .
 #clean limpia y package compila todo el poryecto
 # RUN mvn clean package -DskipTests= target/server1.0.0-SNAPSHOT.jar 
 # cp target/*.jar app.jar para renombrar el archivo jar
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
 RUN mvn clean package -DskipTests && cp target/*.jar app.jar
 
 EXPOSE 8080
