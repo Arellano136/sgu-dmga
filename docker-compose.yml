@@ -1,0 +1,67 @@
+#Aqui se configuran los contenedores de Docker
+services:
+  database:
+    image: mysql:8
+    container_name: sgu-database
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: userdb
+    ports:
+      #configuracion del puerto local:puerto del contenedor
+      - "3307:3306" 
+    networks:
+      - sgu-net
+    volumes:
+      - sgu-volume:/var/lib/mysql
+
+  frontend:
+    image: client:1.0-sgu
+    build:
+      context: ./client
+      args:
+        API_HOST: localhost
+        API_PORT: 8082
+        API_BASE: /sgu-api
+    container_name: sgu-frontend
+    ports:
+    #Port FORWARDING =mapeo de puertos
+    #PC :3000 <===================> contenedor :80
+      - "3000:80" 
+    networks: 
+      - sgu-net
+      ##levantar el servicio 
+    depends_on:
+      - database
+
+  backend:
+    container_name: sgu-backend
+    image: server:1.0-sgu
+    build:
+      context: ./service
+    environment:
+    #jdbc:mysql://database:3307 ==========> localhost:3306
+      SERVER_PORT: 8081
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: userdb
+      DB_USER: root
+      DB_PASS: root
+    ports:
+      - "8082:8081"
+    networks:
+      - sgu-net
+    depends_on:
+      - frontend
+
+# Aquí se configuran las redes donde se comunican los contenedores
+#docker network create --driver bridge sgu-net
+networks:
+  sgu-net:
+    external: true
+
+#Aqui se configuran los volúmenes que ocupan los contenedores
+#docker volume create sgu-volume
+volumes:
+  sgu-volume:
+    external: true
+  
