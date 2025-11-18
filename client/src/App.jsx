@@ -5,8 +5,9 @@ import UserForm from "./components/UserForm";
 import UserTable from "./components/UserTable";
 import ConfirmModal from "./components/ConfirmModal";
 
-const API_URL = "http://localhost:8081/sgu-api/user";
-
+// Configuración de la API usando variables de entorno
+const ENV = import.meta.env;
+const API_URL = `${ENV.VITE_API_PROTOCOL}://${ENV.VITE_API_HOST}:${ENV.VITE_API_PORT}${ENV.VITE_API_BASE}`;
 const App = () => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,14 +26,25 @@ const App = () => {
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/all`);
+      console.log('Cargando usuarios desde:', `${API_URL}/user/all`);
+      
+      const res = await fetch(`${API_URL}/user/all`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Status:', res.status);
       const data = await res.json();
+      
       if (Array.isArray(data.result)) {
         setUsers(data.result);
       } else {
         setUsers([]);
       }
-    } catch {
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
       showNotification("Error al cargar los usuarios", "error");
     } finally {
       setIsLoading(false);
@@ -42,12 +54,17 @@ const App = () => {
   const handleSave = async (userData) => {
     setIsFormLoading(true);
     try {
-      const res = await fetch(`${API_URL}/save`, {
+      const res = await fetch(`${API_URL}/user/save`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(userData),
       });
+      
       const data = await res.json();
+      
       if (data.result) {
         showNotification("Usuario guardado correctamente");
         setShowAddModal(false);
@@ -55,6 +72,9 @@ const App = () => {
       } else {
         showNotification(data.message || "Error al guardar", "error");
       }
+    } catch (error) {
+      console.error('Error al guardar usuario:', error);
+      showNotification("Error al guardar el usuario", "error");
     } finally {
       setIsFormLoading(false);
     }
@@ -63,12 +83,17 @@ const App = () => {
   const handleUpdate = async (userData) => {
     setIsFormLoading(true);
     try {
-      const res = await fetch(`${API_URL}/update`, {
+      const res = await fetch(`${API_URL}/user/update`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(selectedUser),
       });
+      
       const data = await res.json();
+      
       if (data.result) {
         showNotification("Usuario actualizado correctamente");
         setShowEditModal(false);
@@ -77,6 +102,9 @@ const App = () => {
       } else {
         showNotification(data.message || "Error al actualizar", "error");
       }
+    } catch (error) {
+      console.error('Error al actualizar usuario:', error);
+      showNotification("Error al actualizar el usuario", "error");
     } finally {
       setIsFormLoading(false);
     }
@@ -85,8 +113,11 @@ const App = () => {
   const handleDelete = async () => {
     setIsFormLoading(true);
     try {
-      const res = await fetch(`${API_URL}/${selectedUser.id}`, {
+      const res = await fetch(`${API_URL}/user/${selectedUser.id}`, {
         method: "DELETE",
+        headers: {
+          "Accept": "application/json"
+        }
       });
 
       let data = null;
@@ -104,6 +135,9 @@ const App = () => {
       } else {
         showNotification(data?.message || "Error al eliminar", "error");
       }
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+      showNotification("Error al eliminar el usuario", "error");
     } finally {
       setIsFormLoading(false);
     }

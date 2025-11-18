@@ -8,19 +8,24 @@ RUN npm install
 
 COPY . .
 
-ARG  API_HOST
+ARG API_HOST
 ARG API_PORT
 ARG API_BASE
+ARG API_PROTOCOL
 
 ENV VITE_API_HOST=$API_HOST
 ENV VITE_API_PORT=$API_PORT
 ENV VITE_API_BASE=$API_BASE
+ENV VITE_API_PROTOCOL=$API_PROTOCOL
+
+RUN echo "Building with API_URL: $VITE_API_PROTOCOL://$VITE_API_HOST:$VITE_API_PORT$VITE_API_BASE"
 
 RUN npm run build
 #Etapa 2:Imagen
 FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
